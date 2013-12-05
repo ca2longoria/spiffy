@@ -22,11 +22,17 @@ public class spiffy
 				System.out.println(rq.uri);
 				System.out.println(rq.host);
 				
+				String content = "<body>Hey there?</body>";
+				
 				PrintWriter pout = new PrintWriter(out);
-				pout.println("WOAH!");
+				pout.println("HTTP/1.1 200 OK");
+				pout.println("Content-Type: text/html");
+				pout.println("Content-Length: "+content.length());
+				pout.println();
+				pout.println(content);
 				pout.flush();
 				
-				return null;
+				return rq;
 			}
 		};
 		

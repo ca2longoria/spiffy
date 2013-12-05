@@ -91,7 +91,7 @@ public abstract class Spiffy
 					String line = sc.nextLine();
 					if (line.length() == 0) break;
 					
-					//System.out.println(line);
+					System.out.println(line);
 					// TODO: More stringent qualifications for success.
 					success = true;
 					
@@ -116,6 +116,8 @@ public abstract class Spiffy
 						else if (methodString.equals("POST"))
 							method = RequestMethod.POST;
 						// TODO: Implement the rest of the RequestMethods.
+						
+						uri = mm.group(2);
 					}
 				}
 				// Stream remains *open*
