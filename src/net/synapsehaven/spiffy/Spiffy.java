@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,16 +23,32 @@ public abstract class Spiffy
 	{
 		InputStream sin = null;
 		OutputStream sout = null;
-		while (true)
+		
+		try
+		{
+			serverSock = new ServerSocket(port);
+			// 20-second forced timeout
+			serverSock.setSoTimeout(20000);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		// Boolean check intended to break loop out if running in thread and
+		// things in the main thread go awry.
+		while (continueAcceptLoop())
 		{	
-			try { serverSock = new ServerSocket(port); }
-			catch (IOException e){}
-			
 			Socket sock = null;
 			try {
 				sock = serverSock.accept();
 				sin = sock.getInputStream();
 				sout = sock.getOutputStream();
+			}
+			catch (SocketTimeoutException e)
+			{
+				//System.err.println("serverSock natrual timeout: "+new Date());
+				continue;
 			}
 			catch (IOException e){}
 			
@@ -44,14 +61,17 @@ public abstract class Spiffy
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Spiffy listen (port "+port+") loop ended.");
 	}
 	
 	abstract protected Object handleConnection(InputStream in, OutputStream out);
+	abstract protected boolean continueAcceptLoop();
 	
 	
 	public static class Web extends Spiffy
 	{
-		public Object handleConnection(InputStream in, OutputStream out)
+		@Override
+		protected Object handleConnection(InputStream in, OutputStream out)
 		{
 			RequestHeader reqHeader = null;
 			
@@ -60,6 +80,14 @@ public abstract class Spiffy
 			System.out.println(">> handleConnection end");
 			
 			return reqHeader;
+		}
+		
+		public Boolean acceptLoopFlag = new Boolean(true);
+		
+		@Override
+		protected boolean continueAcceptLoop()
+		{
+			return acceptLoopFlag.booleanValue();
 		}
 		
 		public static enum RequestMethod
